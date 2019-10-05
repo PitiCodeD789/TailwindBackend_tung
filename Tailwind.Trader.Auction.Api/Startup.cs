@@ -28,7 +28,7 @@ namespace Tailwind.Trader.Auction.Api
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            services.AddSingleton<AuctionContext>();
+            services.AddScoped<AuctionContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -14,7 +14,8 @@ namespace Tailwind.Trader.Auction.Api.Models
         public string Name { get; set; }
         public DateTime CreatedDateTme { get; set; }
         public DateTime Expired { get; set; }
-        public int HighestBidder { get; set; }
+        public int HighestBidderId { get; set; }
+        public string HighestBidderName { get; set; }
         public AuctionStatus AuctionStatus { get; set; }
         public PaidStatus PaidStatus { get; set; }
         public double ProductWeight { get; set; }

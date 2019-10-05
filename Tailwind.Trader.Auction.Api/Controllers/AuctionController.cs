@@ -59,11 +59,20 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("CurrentBid/{userId}")]
         public ActionResult GetCurrentBid(int userId)
         {
-            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories).Where(x => x.AuctionStatus == Helper.AuctionStatus.Open).Select(x => new { x.BidHistories, x.ProductImages, x.HighestBidder }).ToList();
+            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
+                .Where(product => product.BidHistories.Any(bid => bid.BidderId == userId) && product.AuctionStatus == Helper.AuctionStatus.Open)
+                .Select(x => new { x.BidHistories, x.ProductImages, x.Name , x.Price , x.HighestBidderName, x.Expired })
+                .ToList();
+
             List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
             {
                 BidHistories = s.BidHistories.LastOrDefault(x => x.BidderId == userId),
-                ProductImages = s.ProductImages
+                ProductImages = s.ProductImages,
+                ProductName = s.Name,
+                HigherBidder = s.HighestBidderName,
+                Price = s.Price,
+                Expired = s.Expired
+
             }).ToList();
 
             return Ok(bidDetailViewModel);
@@ -73,18 +82,19 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("Bid")]
         public ActionResult Bid([FromBody]BidCommand bidCommand)
         {
-            Product a = _auctionContext.Products.FirstOrDefault(x => x.Id == bidCommand.ProductId);
-            if (a == null)
+            Product product = _auctionContext.Products.FirstOrDefault(x => x.Id == bidCommand.ProductId);
+            if (product == null)
                 return BadRequest();
 
-            a.HighestBidder = bidCommand.BidderId;
-            a.Price = bidCommand.Price;
+            product.HighestBidderId = bidCommand.BidderId;
+            product.HighestBidderName = bidCommand.BidderName;
+            product.Price = bidCommand.Price;
 
             bool isUpdate, isAdd;
 
             try
             {
-                _auctionContext.Update(a);
+                _auctionContext.Update(product);
                 _auctionContext.SaveChanges();
                 isUpdate = true;
                 isAdd = CreateBidHistory(bidCommand);

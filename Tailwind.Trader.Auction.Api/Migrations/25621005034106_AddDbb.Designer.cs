@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tailwind.Trader.Auction.Api.Infrastucture;
 
 namespace Tailwind.Trader.Auction.Api.Migrations
 {
     [DbContext(typeof(AuctionContext))]
-    partial class AuctionContextModelSnapshot : ModelSnapshot
+    [Migration("25621005034106_AddDbb")]
+    partial class AddDbb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
