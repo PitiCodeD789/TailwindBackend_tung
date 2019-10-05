@@ -161,7 +161,7 @@ namespace Tailwind.Traders.WebBff.Controllers
      
             if (result == null || !result.IsOk)
             {
-                var resultCode = result?.Code ?? -1;
+                var resultCode = (int)result?.Code -1;
                 _logger.LogInformation($"Classification failed due to HTTP CODE {resultCode}");
                 return StatusCode(resultCode, "Request to inner container returned HTTP " + resultCode);
             }
