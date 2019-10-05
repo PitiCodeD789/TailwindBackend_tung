@@ -71,7 +71,10 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("auctioned/{userId}")]
         public ActionResult GetAuctionedItems(int userId)
         {
-            var item = _auctionContext.Products.Where(x => x.HighestBidderId == userId).ToList();
+            var item = _auctionContext.Products
+                .Where(x => x.HighestBidderId == userId && x.AuctionStatus == Models.Helper.AuctionStatus.Close)
+                .ToList();
+
             if (item == null)
                 return BadRequest();
 
