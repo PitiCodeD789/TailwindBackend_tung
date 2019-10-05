@@ -53,7 +53,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidDetail/{userId}")]
         public ActionResult GetBidDetail(int userId)
         {
-            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories).Where(product => product.BidHistories.Any(bid => bid.BidderId == userId)).Select(x => new { x.BidHistories, x.ProductImages }).ToList();
+            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
+                .Where(product => product.BidHistories.Any(bid => bid.BidderId == userId))
+                .Select(x => new { x.BidHistories, x.ProductImages }).ToList();
             List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
             {
                 BidHistories = s.BidHistories.LastOrDefault(x => x.BidderId == userId),
@@ -61,6 +63,17 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }).ToList();
 
             return Ok(bidDetailViewModel);
+        }
+
+        //http://192.168.1.40:30000/v1/api/auction/auctioned/{userId}
+        [HttpGet("auctioned/{userId}")]
+        public ActionResult GetAuctionedItems(int userId)
+        {
+            var item = _auctionContext.Products.Where(x => x.HighestBidderId == userId).ToList();
+            if (item == null)
+                return BadRequest();
+
+            return Ok(item);
         }
 
         //http://192.168.1.40:30000/v1/api/auction/currentbid/{userId}
