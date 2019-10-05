@@ -18,5 +18,11 @@ namespace Tailwind.Trader.Auction.Api.Models
             Wait,
             Paid
         }
+
+        public enum ImageType
+        {
+            MainPicture,
+            SidePicture
+        }
     }
 }
