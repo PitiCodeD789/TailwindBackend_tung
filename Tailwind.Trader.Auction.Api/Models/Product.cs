@@ -17,6 +17,7 @@ namespace Tailwind.Trader.Auction.Api.Models
         public int HighestBidder { get; set; }
         public AuctionStatus AuctionStatus { get; set; }
         public PaidStatus PaidStatus { get; set; }
+        public double ProductWeight { get; set; }
 
         public List<ProductImagePath> ProductImages { get; set; }
         public List<Detail> Details { get; set; }
