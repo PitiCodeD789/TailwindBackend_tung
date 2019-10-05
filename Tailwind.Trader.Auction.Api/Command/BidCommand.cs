@@ -13,6 +13,5 @@ namespace Tailwind.Trader.Auction.Api.Command
         public int ProductId { get; set; }
         public decimal Price { get; set; }
         public DateTime CreatedDateTime { get; set; }
-
     }
 }

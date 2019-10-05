@@ -27,7 +27,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tailwind.Trader.Auction.Api
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tailwind.Trader.Payment.Api", "..\Tailwind.Trader.Payment.Api\Tailwind.Trader.Payment.Api.csproj", "{33A5C640-28E6-4C65-A015-944BD06E174E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tailwind.Trader.User.Api", "..\Tailwind.Trader.User.Api\Tailwind.Trader.User.Api.csproj", "{D92D6B29-DC7A-4EDC-A777-075CC781AC0A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tailwind.Trader.User.Api", "..\Tailwind.Trader.User.Api\Tailwind.Trader.User.Api.csproj", "{D92D6B29-DC7A-4EDC-A777-075CC781AC0A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AppCenter", "AppCenter", "{D5691826-413B-4098-8C77-928928EFDC4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailwindBackend.Validator", "..\TailwindBackend.Validator\TailwindBackend.Validator.csproj", "{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -171,6 +175,18 @@ Global
 		{D92D6B29-DC7A-4EDC-A777-075CC781AC0A}.Release|x64.Build.0 = Release|Any CPU
 		{D92D6B29-DC7A-4EDC-A777-075CC781AC0A}.Release|x86.ActiveCfg = Release|Any CPU
 		{D92D6B29-DC7A-4EDC-A777-075CC781AC0A}.Release|x86.Build.0 = Release|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Debug|x64.Build.0 = Debug|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Debug|x86.Build.0 = Debug|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Release|x64.ActiveCfg = Release|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Release|x64.Build.0 = Release|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Release|x86.ActiveCfg = Release|Any CPU
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -186,6 +202,7 @@ Global
 		{03A9F006-995D-4614-97CC-3EF2744D21F4} = {E8A4248E-1EAC-48AE-9060-973D4C15B548}
 		{33A5C640-28E6-4C65-A015-944BD06E174E} = {E8A4248E-1EAC-48AE-9060-973D4C15B548}
 		{D92D6B29-DC7A-4EDC-A777-075CC781AC0A} = {E8A4248E-1EAC-48AE-9060-973D4C15B548}
+		{C8CD48B9-2CE9-43CC-9EAB-35468B81AE2A} = {D5691826-413B-4098-8C77-928928EFDC4D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D3E7ED9-6991-46BF-BBD8-57AE7000A309}

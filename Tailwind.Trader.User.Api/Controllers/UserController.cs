@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Tailwind.Trader.User.Api.Command;
 using Tailwind.Trader.User.Api.Infrastucture;
 using Tailwind.Trader.User.Api.ViewModels;
+using TailwindBackend.Validator;
 
 namespace Tailwind.Trader.User.Api.Controllers
 {
@@ -17,9 +18,12 @@ namespace Tailwind.Trader.User.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserContext _userContext;
-        public UserController(UserContext userContext)
+        private readonly UserValidation _userValidation;
+
+        public UserController(UserContext userContext, UserValidation userValidation)
         {
             _userContext = userContext;
+            _userValidation = userValidation;
         }
 
         [HttpPost("Register")]
@@ -32,7 +36,6 @@ namespace Tailwind.Trader.User.Api.Controllers
                 return NoContent();
             else
                 return BadRequest("Email Invalid");
-
         }
 
         //http://192.168.1.40:32000/v1/api/User/Address
@@ -47,7 +50,6 @@ namespace Tailwind.Trader.User.Api.Controllers
                 return NoContent();
             else
                 return BadRequest("Invalid User");
-
         }
 
         [HttpPost("Login")]
@@ -55,8 +57,10 @@ namespace Tailwind.Trader.User.Api.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-
-            string password = HashPassword(loginCommand.Password);
+            bool isEmail = _userValidation.IsValidEmail(loginCommand.Email);
+            if (!isEmail)
+                return BadRequest();
+            string password = _userValidation.HashPassword(loginCommand.Password);
             var user = _userContext.Users.FirstOrDefault(x => x.Email.Equals(loginCommand.Email) && x.Password.Equals(password));
             if (user == null)
                 return BadRequest("Wrong Username or Password ");
@@ -93,10 +97,10 @@ namespace Tailwind.Trader.User.Api.Controllers
         }
 
         private bool CreateUser(CreateUserCommand userCommand)
-        {            
+        {
             try
             {
-                userCommand.Password = HashPassword(userCommand.Password);
+                userCommand.Password = _userValidation.HashPassword(userCommand.Password);
                 Models.User newUser = userCommand.MapUser();
                 _userContext.Add<Models.User>(newUser);
                 _userContext.SaveChanges();
@@ -107,22 +111,6 @@ namespace Tailwind.Trader.User.Api.Controllers
                 return false;
                 throw e;
             }
-
         }
-
-        private static string HashPassword(string password)
-        {
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("X2"));
-                }
-                return builder.ToString();
-            }
-        }
-
     }
 }

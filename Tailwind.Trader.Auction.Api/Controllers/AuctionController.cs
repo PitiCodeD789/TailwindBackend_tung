@@ -23,8 +23,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         public static readonly string baseUrl = "https://biddingauction-4edd5.firebaseio.com/";
         public FirebaseClient firebase = new FirebaseClient(baseUrl, new FirebaseOptions { AuthTokenAsyncFactory = () => Task.FromResult(authSecret) });
 
-
         private readonly AuctionContext _auctionContext;
+
         public AuctionController(AuctionContext auctionContext)
         {
             _auctionContext = auctionContext;
@@ -53,23 +53,23 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidDetail/{userId}")]
         public ActionResult GetBidDetail(int userId)
         {
-            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories).Where(product => product.BidHistories.Any(bid => bid.BidderId == userId)).Select(x => new { x.BidHistories, x.ProductImages}).ToList();
+            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories).Where(product => product.BidHistories.Any(bid => bid.BidderId == userId)).Select(x => new { x.BidHistories, x.ProductImages }).ToList();
             List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
             {
                 BidHistories = s.BidHistories.LastOrDefault(x => x.BidderId == userId),
                 ProductImages = s.ProductImages.FirstOrDefault(x => x.ImageType == Models.Helper.ImageType.MainPicture).ImagePath,
-            }).ToList();       
-   
+            }).ToList();
+
             return Ok(bidDetailViewModel);
         }
 
         //http://192.168.1.40:30000/v1/api/auction/currentbid/{userId}
         [HttpGet("CurrentBid/{userId}")]
-        public ActionResult GetCurrentBid(int userId) 
+        public ActionResult GetCurrentBid(int userId)
         {
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
                 .Where(product => product.BidHistories.Any(bid => bid.BidderId == userId) && product.AuctionStatus == Helper.AuctionStatus.Open)
-                .Select(x => new { x.BidHistories, x.ProductImages, x.Name , x.Price , x.HighestBidderName, x.Expired })
+                .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.Expired })
                 .ToList();
 
             List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
@@ -80,7 +80,6 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 HigherBidder = s.HighestBidderName,
                 Price = s.Price,
                 Expired = s.Expired
-
             }).ToList();
 
             return Ok(bidDetailViewModel);
@@ -95,12 +94,12 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 return BadRequest();
 
             if (bidCommand.Price <= product.Price)
-                return BadRequest("Amount error"); 
+                return BadRequest("Amount error");
 
             product.HighestBidderId = bidCommand.BidderId;
             product.HighestBidderName = bidCommand.BidderName;
             product.Price = bidCommand.Price;
-            
+
             bool isUpdate, isAdd;
 
             try
