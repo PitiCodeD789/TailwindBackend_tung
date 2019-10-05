@@ -45,7 +45,7 @@ namespace Tailwind.Trader.Payment.Api.Controllers
 
         private void ChangePaymentStatus()
         {
-            HttpClient client = new HttpClient();
+            //HttpClient client = new HttpClient();
 
         }
         private async Task<Charge> Pay(PaymentCommand paymentCommand)
