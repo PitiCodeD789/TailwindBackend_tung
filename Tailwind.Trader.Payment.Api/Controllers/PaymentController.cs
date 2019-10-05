@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Omise;
 using Omise.Models;
 using Tailwind.Trader.Payment.Api.Command;
@@ -19,6 +21,8 @@ namespace Tailwind.Trader.Payment.Api.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly Client client = new Client("pkey_test_5gdhwbsev5jtm6aywj7", "skey_test_5gdhwbsf5de2b3pm9r0");
+        private readonly string url = "http://192.168.1.40:30000/v1/api/auction/paidStatus";
+        private readonly HttpClient httpClient = new HttpClient();
 
         private readonly PaymentContext _paymentContext;
         public PaymentController(PaymentContext paymentContext)
@@ -36,16 +40,42 @@ namespace Tailwind.Trader.Payment.Api.Controllers
 
             if (result.Status.ToString() == "Successful")
             {
-                CreatePaymentTransaction(result, paymentCommand.PayerId);
-                return NoContent();
-            }
+                CreatePaymentTransaction(result, paymentCommand.PayerId, paymentCommand.ProductId);
+                bool isChange = ChangePaymentStatus(paymentCommand.PayerId, paymentCommand.ProductId);
 
+                if (isChange)
+                    return NoContent();
+
+                return BadRequest("Can't Change PaymentStatus");
+            }
             return BadRequest();
+
         }
 
-        private void ChangePaymentStatus()
-        {
-            //HttpClient client = new HttpClient();
+    
+
+        private bool ChangePaymentStatus(int payerId, int productId)
+        {            
+            PaidStatusCommand paidStatusCommand = new PaidStatusCommand()
+            {
+                PayerId = payerId,
+                ProductId = productId
+            };
+            try
+            {
+                var jsonString = JsonConvert.SerializeObject(paidStatusCommand);
+                HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+                var result = httpClient.PostAsync(url, httpContent).Result;
+
+                if (result.IsSuccessStatusCode)
+                    return true;
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
 
         }
         private async Task<Charge> Pay(PaymentCommand paymentCommand)
@@ -77,11 +107,12 @@ namespace Tailwind.Trader.Payment.Api.Controllers
 
         }
 
-        private async void CreatePaymentTransaction(Charge charge, int payerId)
+        private void CreatePaymentTransaction(Charge charge, int payerId, int productId)
         {
             Models.PaymentTransaction newTransaction = new Models.PaymentTransaction()
             {
                 PayerId = payerId,
+                ProductId = productId,
                 Amount = charge.Amount,
                 PaymentReference = charge.Id,
                 PaymentTime = charge.Created,
@@ -90,7 +121,7 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             try
             {
                 _paymentContext.Add<PaymentTransaction>(newTransaction);
-                await _paymentContext.SaveChangesAsync();
+                _paymentContext.SaveChanges();
             }
             catch (Exception e)
             {

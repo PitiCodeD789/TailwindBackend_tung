@@ -10,8 +10,8 @@ using Tailwind.Trader.Payment.Api.Infrastucture;
 namespace Tailwind.Trader.Payment.Api.Migrations
 {
     [DbContext(typeof(PaymentContext))]
-    [Migration("25621005003305_Add")]
-    partial class Add
+    [Migration("25621005120959_fixPayerId")]
+    partial class fixPayerId
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -39,10 +39,9 @@ namespace Tailwind.Trader.Payment.Api.Migrations
 
                     b.Property<DateTime>("PaymentTime");
 
-                    b.HasKey("Id");
+                    b.Property<int>("ProductId");
 
-                    b.HasAlternateKey("PayerId")
-                        .HasName("Payer_ID");
+                    b.HasKey("Id");
 
                     b.ToTable("Payments");
                 });

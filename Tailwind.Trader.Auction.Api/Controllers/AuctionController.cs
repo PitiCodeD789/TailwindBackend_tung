@@ -11,7 +11,6 @@ using Tailwind.Trader.Auction.Api.Command;
 using Tailwind.Trader.Auction.Api.Infrastucture;
 using Tailwind.Trader.Auction.Api.Models;
 using Tailwind.Trader.Auction.Api.ViewModel;
-using Tailwind.Trader.Payment.Api.Command;
 
 namespace Tailwind.Trader.Auction.Api.Controllers
 {
@@ -34,7 +33,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("Products")]
         public ActionResult GetProducts()
         {
-            List<Product> result = _auctionContext.Products.ToList();
+            List<Product> result = _auctionContext.Products.Include(x => x.ProductImages).ToList();
+
             return Ok(result);
         }
 
@@ -42,7 +42,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("Product/{id}")]
         public ActionResult GetProductById(int id)
         {
-            var result = _auctionContext.Products.FirstOrDefault(x => x.Id == id);
+            var result = _auctionContext.Products.Include(x => x.ProductImages).Include(x => x.Details).FirstOrDefault(x => x.Id == id);
             if (result == null)
                 return BadRequest();
 
@@ -227,11 +227,22 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             return Ok(details);
         }
 
+        //http://192.168.1.40:30000/v1/api/auction/BidHistories/{productId}
+        [HttpGet("BidHistories/{productId}")]
+        public ActionResult GetBidHistoriesById(int productId)
+        {
+            var details = _auctionContext.BidHistories.Where(x => x.Id == productId).ToList();
+            if (details == null)
+                return BadRequest();
+
+            return Ok(details);
+        }
         private bool CreateBidHistory(BidCommand bidCommand)
         {
             BidHistory newBid = new BidHistory()
             {
                 BidderId = bidCommand.BidderId,
+                BidderName = bidCommand.BidderName,
                 Price = bidCommand.Price,
                 ProductId = bidCommand.ProductId,
                 CreatedDateTime = bidCommand.CreatedDateTime
@@ -248,7 +259,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }
         }
 
-        //http://192.168.1.40:30000/v1/api/auction/addproductdetail
+        //http://192.168.1.40:30000/v1/api/auction/paidStatus
         [HttpPost("PaidStatus")]
         public ActionResult ChangePaidStatus([FromBody]PaidStatusCommand paidStatusCommand)
         {
@@ -276,5 +287,48 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 return BadRequest(e);
             }
         }
+
+        ////http://192.168.1.40:30000/v1/api/auction/product/new
+        //[HttpPost("Product/new")]
+        //public ActionResult CreateProduct([FromBody]NewProductCommand newProduct)
+        //{
+        //    Product product = new Product()
+        //    {
+        //        Name = newProduct.Name,
+        //        ProductWeight = newProduct.ProductWeight,
+        //        Expired = newProduct.Expired,
+        //        Price = newProduct.Price
+        //    };
+        //    try
+        //    {
+        //        _auctionContext.Add<Product>(product);
+        //        _auctionContext.SaveChanges();
+        //        return NoContent();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return BadRequest("Can't add product");
+        //    }
+        //}
+
+        ////http://192.168.1.40:30000/v1/api/auction/product/image
+        //[HttpPost("Product/image")]
+        //public ActionResult CreateProduct([FromBody]ImagePathCommand images)
+        //{
+        //    ProductImagePath productImagePath = new ProductImagePath()
+        //    {
+        //        ProductId = images.ProductId,
+        //    };
+        //    try
+        //    {
+        //        _auctionContext.Add<Product>(product);
+        //        _auctionContext.SaveChanges();
+        //        return NoContent();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return BadRequest("Can't add product");
+        //    }
+        //}
     }
 }

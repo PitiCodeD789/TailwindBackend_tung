@@ -10,8 +10,8 @@ using Tailwind.Trader.Auction.Api.Infrastucture;
 namespace Tailwind.Trader.Auction.Api.Migrations
 {
     [DbContext(typeof(AuctionContext))]
-    [Migration("25621005053005_AddImageType")]
-    partial class AddImageType
+    [Migration("25621005130927_AddDb")]
+    partial class AddDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -28,6 +28,8 @@ namespace Tailwind.Trader.Auction.Api.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("BidderId");
+
+                    b.Property<string>("BidderName");
 
                     b.Property<DateTime>("CreatedDateTime")
                         .ValueGeneratedOnAddOrUpdate()

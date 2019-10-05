@@ -11,6 +11,7 @@ namespace Tailwind.Trader.Auction.Api.Models
         public int Id { get; set; }
         public int ProductId { get; set; }
         public int BidderId { get; set; }
+        public string BidderName { get; set; }
         public decimal Price { get; set; }
         public DateTime CreatedDateTime { get; set; }
 

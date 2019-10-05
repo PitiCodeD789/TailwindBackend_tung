@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tailwind.Trader.Payment.Api.Infrastucture;
 
 namespace Tailwind.Trader.Payment.Api.Migrations
 {
     [DbContext(typeof(PaymentContext))]
-    partial class PaymentContextModelSnapshot : ModelSnapshot
+    [Migration("25621005120046_AddDb")]
+    partial class AddDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,6 +42,9 @@ namespace Tailwind.Trader.Payment.Api.Migrations
                     b.Property<int>("ProductId");
 
                     b.HasKey("Id");
+
+                    b.HasAlternateKey("PayerId")
+                        .HasName("Payer_ID");
 
                     b.ToTable("Payments");
                 });

@@ -9,6 +9,7 @@ namespace Tailwind.Trader.Payment.Api.Models
     {
         public int Id { get; set; }
         public int PayerId { get; set; }
+        public int ProductId { get; set; }
         public DateTime PaymentTime { get; set; }
         public string PaymentReference { get; set; }
         public decimal Amount { get; set; }
