@@ -8,8 +8,11 @@ namespace Tailwind.Trader.Auction.Api.ViewModel
 {
     public class BidDetailViewModel
     {
-        public List<ProductImagePath> ProductImages { get; set; }
+        public string ProductName { get; set; }
+        public string HigherBidder { get; set; }
+        public decimal Price { get; set; }
+        public DateTime Expired { get; set; }
+        public string ProductImages { get; set; }
         public BidHistory BidHistories { get; set; }
-
     }
 }

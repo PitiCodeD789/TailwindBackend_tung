@@ -50,7 +50,6 @@ namespace Tailwind.Trader.User.Api.Controllers
 
         }
 
-
         [HttpPost("Login")]
         public ActionResult Login([FromBody]LoginCommand loginCommand)
         {

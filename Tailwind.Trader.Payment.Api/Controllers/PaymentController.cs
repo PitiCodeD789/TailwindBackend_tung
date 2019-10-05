@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +29,9 @@ namespace Tailwind.Trader.Payment.Api.Controllers
         [HttpPost]
         public ActionResult Payment([FromBody]PaymentCommand paymentCommand)
         {
+            if (!CheckCard(paymentCommand.CardNumber))
+                return BadRequest("CardNumber Invalid");
+
             Charge result = Pay(paymentCommand).Result;
 
             if (result.Status.ToString() == "Successful")
@@ -38,6 +43,11 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             return BadRequest();
         }
 
+        private void ChangePaymentStatus()
+        {
+            HttpClient client = new HttpClient();
+
+        }
         private async Task<Charge> Pay(PaymentCommand paymentCommand)
         {
             try
@@ -54,7 +64,7 @@ namespace Tailwind.Trader.Payment.Api.Controllers
                 var charge = await client.Charges.Create(new CreateChargeRequest
                 {
                     Amount = paymentCommand.Amount,
-                    Currency = "usd",
+                    Currency = "thb",
                     Card = token.Id
                 });
 
@@ -87,5 +97,25 @@ namespace Tailwind.Trader.Payment.Api.Controllers
                 throw e;
             }
         }
+
+        private bool CheckCard(string cardNumber)
+        {
+            Regex visaRegex = new Regex(@"^4[0-9]{6,}$");
+            Regex masterRegex = new Regex(@"^5[1-5][0-9]{5,}|222[1-9][0-9]{3,}|22[3-9][0-9]{4,}|2[3-6][0-9]{5,}|27[01][0-9]{4,}|2720[0-9]{3,}$");
+            Regex jcbRegex = new Regex(@"^(3(?:088|096|112|158|337|5(?:2[89]|[3-8][0-9]))\d{12})$");
+
+            if (visaRegex.IsMatch(cardNumber))
+                return true;
+
+            if (masterRegex.IsMatch(cardNumber))
+                return true;
+
+            if (jcbRegex.IsMatch(cardNumber))
+                return true;
+
+            return false;
+
+        }
+
     }
 }
