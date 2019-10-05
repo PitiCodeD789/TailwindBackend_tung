@@ -26,10 +26,6 @@ namespace Tailwind.Trader.Payment.Api.Infrastucture
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("GetUtcDate()");
 
-            builder.Entity<PaymentTransaction>()
-                .HasAlternateKey(x => x.PayerId)
-                .HasName("Payer_ID");
-
             base.OnModelCreating(builder);
         }
     }

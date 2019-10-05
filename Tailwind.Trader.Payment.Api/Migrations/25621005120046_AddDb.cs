@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Tailwind.Trader.Payment.Api.Migrations
 {
-    public partial class Add : Migration
+    public partial class AddDb : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,6 +15,7 @@ namespace Tailwind.Trader.Payment.Api.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     PayerId = table.Column<int>(nullable: false),
+                    ProductId = table.Column<int>(nullable: false),
                     PaymentTime = table.Column<DateTime>(nullable: false),
                     PaymentReference = table.Column<string>(nullable: true),
                     Amount = table.Column<decimal>(nullable: false),

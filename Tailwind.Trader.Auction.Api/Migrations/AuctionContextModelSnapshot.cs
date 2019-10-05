@@ -27,6 +27,8 @@ namespace Tailwind.Trader.Auction.Api.Migrations
 
                     b.Property<int>("BidderId");
 
+                    b.Property<string>("BidderName");
+
                     b.Property<DateTime>("CreatedDateTime")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasDefaultValueSql("GetUtcDate()");

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Tailwind.Trader.Auction.Api.Migrations
 {
-    public partial class Add : Migration
+    public partial class AddDb : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -18,9 +18,11 @@ namespace Tailwind.Trader.Auction.Api.Migrations
                     Name = table.Column<string>(nullable: true),
                     CreatedDateTme = table.Column<DateTime>(nullable: false, defaultValueSql: "GetUtcDate()"),
                     Expired = table.Column<DateTime>(nullable: false, defaultValueSql: "GetUtcDate()"),
-                    HighestBidder = table.Column<int>(nullable: false),
+                    HighestBidderId = table.Column<int>(nullable: false),
+                    HighestBidderName = table.Column<string>(nullable: true),
                     AuctionStatus = table.Column<int>(nullable: false),
-                    PaidStatus = table.Column<int>(nullable: false)
+                    PaidStatus = table.Column<int>(nullable: false),
+                    ProductWeight = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -35,6 +37,7 @@ namespace Tailwind.Trader.Auction.Api.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     ProductId = table.Column<int>(nullable: false),
                     BidderId = table.Column<int>(nullable: false),
+                    BidderName = table.Column<string>(nullable: true),
                     Price = table.Column<decimal>(nullable: false),
                     CreatedDateTime = table.Column<DateTime>(nullable: false, defaultValueSql: "GetUtcDate()")
                 },
@@ -77,6 +80,7 @@ namespace Tailwind.Trader.Auction.Api.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     ProductId = table.Column<int>(nullable: false),
+                    ImageType = table.Column<int>(nullable: false),
                     ImagePath = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
