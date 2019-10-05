@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tailwind.Trader.Auction.Api.Infrastucture;
+using TailwindBackend.Commond;
 
 namespace Tailwind.Trader.Auction.Api
 {
@@ -29,6 +30,7 @@ namespace Tailwind.Trader.Auction.Api
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddScoped<AuctionContext>();
+            services.AddScoped<CommondData>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
