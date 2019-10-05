@@ -11,6 +11,7 @@ using Tailwind.Trader.Auction.Api.Command;
 using Tailwind.Trader.Auction.Api.Infrastucture;
 using Tailwind.Trader.Auction.Api.Models;
 using Tailwind.Trader.Auction.Api.ViewModel;
+using TailwindBackend.Commond;
 
 namespace Tailwind.Trader.Auction.Api.Controllers
 {
@@ -18,15 +19,13 @@ namespace Tailwind.Trader.Auction.Api.Controllers
     [ApiController]
     public class AuctionController : ControllerBase
     {
-        public static readonly string authSecret = "7gX4iRjWMRGWoqezlS1Xt2ZtQyZQQxuMIJRt8ws4";
-        public static readonly string baseUrl = "https://biddingauction-4edd5.firebaseio.com/";
-        public FirebaseClient firebase = new FirebaseClient(baseUrl, new FirebaseOptions { AuthTokenAsyncFactory = () => Task.FromResult(authSecret) });
-
         private readonly AuctionContext _auctionContext;
+        private readonly CommondData _commondData;
 
-        public AuctionController(AuctionContext auctionContext)
+        public AuctionController(AuctionContext auctionContext, CommondData commondData)
         {
             _auctionContext = auctionContext;
+            _commondData = commondData;
         }
 
         //http://192.168.1.40:30000/v1/api/auction/products
@@ -42,6 +41,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("Product/{id}")]
         public ActionResult GetProductById(int id)
         {
+            if (id == default)
+                return BadRequest();
             var result = _auctionContext.Products.Include(x => x.ProductImages).Include(x => x.Details).FirstOrDefault(x => x.Id == id);
             if (result == null)
                 return BadRequest();
@@ -53,6 +54,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidDetail/{userId}")]
         public ActionResult GetBidDetail(int userId)
         {
+            if (userId == default)
+                return BadRequest();
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories).Where(product => product.BidHistories.Any(bid => bid.BidderId == userId)).Select(x => new { x.BidHistories, x.ProductImages }).ToList();
             List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
             {
@@ -67,6 +70,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("CurrentBid/{userId}")]
         public ActionResult GetCurrentBid(int userId)
         {
+            if (userId == default)
+                return BadRequest();
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
                 .Where(product => product.BidHistories.Any(bid => bid.BidderId == userId) && product.AuctionStatus == Helper.AuctionStatus.Open)
                 .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.Expired })
@@ -89,6 +94,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("Bid")]
         public ActionResult Bid([FromBody]BidCommand bidCommand)
         {
+            if (!ModelState.IsValid)
+                return BadRequest();
             Product product = _auctionContext.Products.FirstOrDefault(x => x.Id == bidCommand.ProductId);
             if (product == null)
                 return BadRequest();
@@ -123,7 +130,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
         private async Task AddBid(decimal price, string name, int productId)
         {
-            var bidInfo = (await firebase.Child("Bid").OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
+            var bidInfo = (await _commondData.Firebase.Child("Bid").OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
 
             if (bidInfo == null)
             {
@@ -133,7 +140,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                     Price = price,
                     Name = name
                 };
-                await firebase
+                await _commondData.Firebase
                   .Child("Bid").PostAsync(newBid);
             }
             else
@@ -144,7 +151,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                     Price = price,
                     Name = name
                 };
-                await firebase.Child("Bid").Child(bidInfo.Key).PutAsync(bid);
+                await _commondData.Firebase.Child("Bid").Child(bidInfo.Key).PutAsync(bid);
             }
         }
 
@@ -152,6 +159,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("FinishAuction")]
         public ActionResult FinishActioin([FromBody]FinishAuctionCommand finishAuctionCommand)
         {
+            if (!ModelState.IsValid)
+                return BadRequest();
             var auctionProduct = _auctionContext.Products.FirstOrDefault(x => x.Id == finishAuctionCommand.ProductId);
             if (auctionProduct == null)
                 return BadRequest();
@@ -170,12 +179,13 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             catch (Exception e)
             {
                 return BadRequest();
+                throw e;
             }
         }
 
         private async Task<bool> DeleteBid(int productId)
         {
-            var bidInfo = (await firebase.Child("Bid").OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
+            var bidInfo = (await _commondData.Firebase.Child("Bid").OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
 
             if (bidInfo == null)
             {
@@ -183,7 +193,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }
             else
             {
-                await firebase.Child("Bid").Child(bidInfo.Key).DeleteAsync();
+                await _commondData.Firebase.Child("Bid").Child(bidInfo.Key).DeleteAsync();
 
                 return true;
             }
@@ -193,7 +203,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("AddProductDetail")]
         public ActionResult AddProductDetail([FromBody]ProductDetailCommand productDetailCommand)
         {
-            if (productDetailCommand == null)
+            if (!ModelState.IsValid)
                 return BadRequest();
 
             Detail newDetail = new Detail()
@@ -209,9 +219,10 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
                 return BadRequest();
+                throw e;
             }
         }
 
@@ -219,6 +230,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("ProductDetails/{productId}")]
         public ActionResult GetProductDetailById(int productId)
         {
+            if (productId == default)
+                return BadRequest();
             var details = _auctionContext.Details.Where(x => x.Id == productId).ToList();
             if (details == null)
                 return BadRequest();
@@ -230,12 +243,15 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidHistories/{productId}")]
         public ActionResult GetBidHistoriesById(int productId)
         {
+            if (productId == default)
+                return BadRequest();
             var details = _auctionContext.BidHistories.Where(x => x.Id == productId).ToList();
             if (details == null)
                 return BadRequest();
 
             return Ok(details);
         }
+
         private bool CreateBidHistory(BidCommand bidCommand)
         {
             BidHistory newBid = new BidHistory()
@@ -243,8 +259,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 BidderId = bidCommand.BidderId,
                 BidderName = bidCommand.BidderName,
                 Price = bidCommand.Price,
-                ProductId = bidCommand.ProductId,
-                CreatedDateTime = bidCommand.CreatedDateTime
+                ProductId = bidCommand.ProductId
             };
             try
             {
@@ -255,6 +270,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             catch (Exception e)
             {
                 return false;
+                throw e;
             }
         }
 
@@ -262,6 +278,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("PaidStatus")]
         public ActionResult ChangePaidStatus([FromBody]PaidStatusCommand paidStatusCommand)
         {
+            if (!ModelState.IsValid)
+                return BadRequest();
             var product = _auctionContext.Products.FirstOrDefault(x => x.Id == paidStatusCommand.ProductId);
             if (product == null)
                 return BadRequest("Not found product");
