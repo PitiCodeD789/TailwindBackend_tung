@@ -15,5 +15,6 @@ namespace Tailwind.Trader.Auction.Api.Command
         [Required]
         [RegularExpression("^[0-9]*$")]
         public int PayerId { get; set; }
+
     }
 }

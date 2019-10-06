@@ -33,6 +33,9 @@ namespace Tailwind.Trader.Payment.Api.Controllers
         [HttpPost]
         public ActionResult Payment([FromBody]PaymentCommand paymentCommand)
         {
+            if (!Identify(paymentCommand))
+                return BadRequest();
+
             if (!CheckCard(paymentCommand.CardNumber))
                 return BadRequest("CardNumber Invalid");
 
@@ -52,14 +55,17 @@ namespace Tailwind.Trader.Payment.Api.Controllers
 
         }
 
-    
+        private bool Identify(PaymentCommand paymentCommand)
+        {
+            throw new NotImplementedException();
+        }
 
         private bool ChangePaymentStatus(int payerId, int productId)
         {            
             PaidStatusCommand paidStatusCommand = new PaidStatusCommand()
             {
                 PayerId = payerId,
-                ProductId = productId
+                ProductId = productId,
             };
             try
             {
@@ -113,9 +119,9 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             {
                 PayerId = payerId,
                 ProductId = productId,
-                Amount = charge.Amount,
+                Amount = (charge.Amount / 100),
                 PaymentReference = charge.Id,
-                PaymentTime = charge.Created,
+                PaymentTime = charge.Created
             };
 
             try

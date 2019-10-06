@@ -1,0 +1,10 @@
+        //http://192.168.1.40:30000/v1/api/auction/auctioned/{userId}
+        [HttpGet("auctioned/{userId}")]
+        public ActionResult GetAuctionedItems(int userId)
+        {
+            var item = _auctionContext.Products.Where(x => x.HighestBidderId == userId).ToList();
+            if (item == null)
+                return BadRequest();
+
+            return Ok(item);
+        }

@@ -247,7 +247,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         {
             if (productId == default)
                 return BadRequest();
-            var details = _auctionContext.Details.Where(x => x.Id == productId).ToList();
+            var details = _auctionContext.Details.Where(x => x.ProductId == productId).ToList();
             if (details == null)
                 return BadRequest();
 
@@ -295,6 +295,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
+
             var product = _auctionContext.Products.FirstOrDefault(x => x.Id == paidStatusCommand.ProductId);
             if (product == null)
                 return BadRequest("Not found product");
@@ -320,47 +321,75 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }
         }
 
-        ////http://192.168.1.40:30000/v1/api/auction/product/new
-        //[HttpPost("Product/new")]
-        //public ActionResult CreateProduct([FromBody]NewProductCommand newProduct)
-        //{
-        //    Product product = new Product()
-        //    {
-        //        Name = newProduct.Name,
-        //        ProductWeight = newProduct.ProductWeight,
-        //        Expired = newProduct.Expired,
-        //        Price = newProduct.Price
-        //    };
-        //    try
-        //    {
-        //        _auctionContext.Add<Product>(product);
-        //        _auctionContext.SaveChanges();
-        //        return NoContent();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return BadRequest("Can't add product");
-        //    }
-        //}
+        //http://192.168.1.40:30000/v1/api/auction/bid/check
+        [HttpPost("bid/check")]
+        public ActionResult CheckBid([FromBody]CheckBidCommand checkBidCommand)
+        {
+            var product = _auctionContext.Products.FirstOrDefault(x => x.Id == checkBidCommand.ProductId);
 
-        ////http://192.168.1.40:30000/v1/api/auction/product/image
-        //[HttpPost("Product/image")]
-        //public ActionResult CreateProduct([FromBody]ImagePathCommand images)
-        //{
-        //    ProductImagePath productImagePath = new ProductImagePath()
-        //    {
-        //        ProductId = images.ProductId,
-        //    };
-        //    try
-        //    {
-        //        _auctionContext.Add<Product>(product);
-        //        _auctionContext.SaveChanges();
-        //        return NoContent();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return BadRequest("Can't add product");
-        //    }
-        //}
+            if (product == null)
+                return BadRequest();
+
+            if (product.PaidStatus == Helper.PaidStatus.Paid)
+                return BadRequest("Already Paid");
+
+            if (product.HighestBidderId != checkBidCommand.UserId)
+                return BadRequest("Wrong User");
+
+            if (checkBidCommand.Amount < product.Price)
+                return BadRequest("Wrong Amount");
+
+            return Ok();
+
+        }
+
+        //http://192.168.1.40:30000/v1/api/auction/product/new
+        [HttpPost("Product/new")]
+        public ActionResult CreateProduct([FromBody]NewProductCommand newProduct)
+        {
+            Product product = new Product()
+            {
+                Name = newProduct.Name,
+                ProductWeight = newProduct.ProductWeight,
+                Expired = newProduct.Expired,
+                Price = newProduct.Price
+            };
+            try
+            {
+                _auctionContext.Add<Product>(product);
+                _auctionContext.SaveChanges();
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                return BadRequest("Can't add product");
+            }
+        }
+
+        //http://192.168.1.40:30000/v1/api/auction/product/image
+        [HttpPost("Product/image")]
+        public ActionResult CreateProductImage([FromBody]ImagePathCommand images)
+        {
+            var productImages = _auctionContext.ProductImagePaths.Where(x => x.ProductId == images.ProductId)
+                .ToList();
+
+            ProductImagePath productImagePath = new ProductImagePath();
+            productImagePath.ProductId = images.ProductId;
+            productImagePath.ImagePath = images.ImagePath;
+            productImagePath.ImageType = (productImages.Count == 0) ? Helper.ImageType.MainPicture : Helper.ImageType.SidePicture;
+
+            try
+            {
+                _auctionContext.Add<ProductImagePath>(productImagePath);
+                _auctionContext.SaveChanges();
+
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                return BadRequest();
+            }
+
+        }
     }
 }
