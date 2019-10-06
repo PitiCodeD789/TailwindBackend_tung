@@ -13,7 +13,7 @@ namespace Tailwind.Trader.Auction.Api.Command
         public int BidderId { get; set; }
 
         [Required]
-        [RegularExpression("^[a-zA-Z]*$")]
+        [RegularExpression("^[a-zA-Z \t]*$")]
         public string BidderName { get; set; }
 
         [Required]
@@ -21,8 +21,8 @@ namespace Tailwind.Trader.Auction.Api.Command
         public int ProductId { get; set; }
 
         [Required]
-        [RegularExpression(@"^\d+\.\d{0,2}$")]
-        [Range(0, 9999999999999999.99)]
+        [RegularExpression(@"^[0-9.]+$")]
+        
         public decimal Price { get; set; }
     }
 }
