@@ -260,7 +260,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         {
             if (productId == default)
                 return BadRequest();
-            var details = _auctionContext.BidHistories.Where(x => x.Id == productId).ToList();
+            var details = _auctionContext.BidHistories.Where(x => x.ProductId == productId).ToList();
             if (details == null)
                 return BadRequest();
 
