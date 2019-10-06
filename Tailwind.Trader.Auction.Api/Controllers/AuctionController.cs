@@ -483,5 +483,29 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 }
             }
         }
+
+        //http://192.168.1.40:30000/v1/api/auction/ChangeExpireDate
+        [HttpPost("ChangeExpireDate")]
+        public ActionResult ChangeExpireDate([FromBody]ChangeExpireCommand changeExpireCommand)
+        {
+            var product = _auctionContext.Products.FirstOrDefault(x => x.Id == changeExpireCommand.ProductId);
+
+            if (product == null)
+                return BadRequest();
+
+            product.Expired.AddMinutes(changeExpireCommand.Minute);
+            try
+            {
+                _auctionContext.Update<Product>(product);
+                _auctionContext.SaveChanges();
+
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                return BadRequest();
+            }
+
+        }
     }
 }
