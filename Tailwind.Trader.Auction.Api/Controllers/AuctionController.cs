@@ -19,6 +19,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
     [ApiController]
     public class AuctionController : ControllerBase
     {
+        public static readonly string authSecret = "7gX4iRjWMRGWoqezlS1Xt2ZtQyZQQxuMIJRt8ws4";
         private readonly AuctionContext _auctionContext;
         private readonly IConfiguration _configuration;
         private FirebaseClient Firebase;
@@ -72,6 +73,20 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }).ToList();
 
             return Ok(bidDetailViewModel);
+        }
+
+        //http://192.168.1.40:30000/v1/api/auction/auctioned/{userId}
+        [HttpGet("auctioned/{userId}")]
+        public ActionResult GetAuctionedItems(int userId)
+        {
+            var item = _auctionContext.Products
+                .Where(x => x.HighestBidderId == userId && x.AuctionStatus == Models.Helper.AuctionStatus.Close)
+                .ToList();
+
+            if (item == null)
+                return BadRequest();
+
+            return Ok(item);
         }
 
         //http://192.168.1.40:30000/v1/api/auction/currentbid/{userId}

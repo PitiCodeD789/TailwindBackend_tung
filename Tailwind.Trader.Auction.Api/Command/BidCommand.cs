@@ -21,6 +21,7 @@ namespace Tailwind.Trader.Auction.Api.Command
         public int ProductId { get; set; }
 
         [Required]
+        [RegularExpression(@"^[0-9.]+$")]
         public decimal Price { get; set; }
     }
 }
