@@ -7,9 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace TailwindBackend.Validator
 {
-    public class UserValidation
+    public static class UserValidation
     {
-        public bool IsValidEmail(string email)
+        public static bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return false;
@@ -54,7 +54,7 @@ namespace TailwindBackend.Validator
             }
         }
 
-        public string HashPassword(string password)
+        public static string HashPassword(string password)
         {
             using (SHA256 sha256Hash = SHA256.Create())
             {

@@ -18,12 +18,10 @@ namespace Tailwind.Trader.User.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserContext _userContext;
-        private readonly UserValidation _userValidation;
 
-        public UserController(UserContext userContext, UserValidation userValidation)
+        public UserController(UserContext userContext)
         {
             _userContext = userContext;
-            _userValidation = userValidation;
         }
 
         [HttpPost("Register")]
@@ -57,10 +55,10 @@ namespace Tailwind.Trader.User.Api.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-            bool isEmail = _userValidation.IsValidEmail(loginCommand.Email);
+            bool isEmail = UserValidation.IsValidEmail(loginCommand.Email);
             if (!isEmail)
                 return BadRequest();
-            string password = _userValidation.HashPassword(loginCommand.Password);
+            string password = UserValidation.HashPassword(loginCommand.Password);
             var user = _userContext.Users.FirstOrDefault(x => x.Email.Equals(loginCommand.Email) && x.Password.Equals(password));
             if (user == null)
                 return BadRequest("Wrong Username or Password ");
@@ -100,7 +98,7 @@ namespace Tailwind.Trader.User.Api.Controllers
         {
             try
             {
-                userCommand.Password = _userValidation.HashPassword(userCommand.Password);
+                userCommand.Password = UserValidation.HashPassword(userCommand.Password);
                 Models.User newUser = userCommand.MapUser();
                 _userContext.Add<Models.User>(newUser);
                 _userContext.SaveChanges();

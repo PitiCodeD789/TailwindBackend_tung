@@ -21,6 +21,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tailwind.Trader.Payment.Api\Tailwind.Trader.Payment.Api.csproj" />
-    <ProjectReference Include="..\TailwindBackend.Commond\TailwindBackend.Commond.csproj" />
   </ItemGroup>
 </Project>
