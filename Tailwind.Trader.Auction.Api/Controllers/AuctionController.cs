@@ -7,11 +7,11 @@ using Firebase.Database.Query;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Tailwind.Trader.Auction.Api.Command;
 using Tailwind.Trader.Auction.Api.Infrastucture;
 using Tailwind.Trader.Auction.Api.Models;
 using Tailwind.Trader.Auction.Api.ViewModel;
-using TailwindBackend.Commond;
 
 namespace Tailwind.Trader.Auction.Api.Controllers
 {
@@ -20,12 +20,20 @@ namespace Tailwind.Trader.Auction.Api.Controllers
     public class AuctionController : ControllerBase
     {
         private readonly AuctionContext _auctionContext;
-        private readonly CommondData _commondData;
+        private readonly IConfiguration _configuration;
+        private FirebaseClient Firebase;
 
-        public AuctionController(AuctionContext auctionContext, CommondData commondData)
+        public AuctionController(AuctionContext auctionContext, IConfiguration configuration)
         {
             _auctionContext = auctionContext;
-            _commondData = commondData;
+            _configuration = configuration;
+            Firebase = new FirebaseClient(
+            _configuration["Firebase:AuctionBaseUrl"],
+            new FirebaseOptions
+            {
+                AuthTokenAsyncFactory =
+            () => Task.FromResult(_configuration["Firebase:AuthKey"])
+            });
         }
 
         //http://192.168.1.40:30000/v1/api/auction/products
@@ -130,7 +138,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
         private async Task AddBid(decimal price, string name, int productId)
         {
-            var bidInfo = (await _commondData.Firebase.Child("Bid").OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
+            var bidInfo = (await Firebase.Child(_configuration["Firebase:BidTable"]).OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
 
             if (bidInfo == null)
             {
@@ -140,8 +148,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                     Price = price,
                     Name = name
                 };
-                await _commondData.Firebase
-                  .Child("Bid").PostAsync(newBid);
+                await Firebase
+                  .Child(_configuration["Firebase:BidTable"]).PostAsync(newBid);
             }
             else
             {
@@ -151,7 +159,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                     Price = price,
                     Name = name
                 };
-                await _commondData.Firebase.Child("Bid").Child(bidInfo.Key).PutAsync(bid);
+                await Firebase.Child(_configuration["Firebase:BidTable"]).Child(bidInfo.Key).PutAsync(bid);
             }
         }
 
@@ -185,7 +193,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
         private async Task<bool> DeleteBid(int productId)
         {
-            var bidInfo = (await _commondData.Firebase.Child("Bid").OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
+            var bidInfo = (await Firebase.Child(_configuration["Firebase:BidTable"]).OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
 
             if (bidInfo == null)
             {
@@ -193,7 +201,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }
             else
             {
-                await _commondData.Firebase.Child("Bid").Child(bidInfo.Key).DeleteAsync();
+                await Firebase.Child(_configuration["Firebase:BidTable"]).Child(bidInfo.Key).DeleteAsync();
 
                 return true;
             }
@@ -304,48 +312,5 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 return BadRequest(e);
             }
         }
-
-        ////http://192.168.1.40:30000/v1/api/auction/product/new
-        //[HttpPost("Product/new")]
-        //public ActionResult CreateProduct([FromBody]NewProductCommand newProduct)
-        //{
-        //    Product product = new Product()
-        //    {
-        //        Name = newProduct.Name,
-        //        ProductWeight = newProduct.ProductWeight,
-        //        Expired = newProduct.Expired,
-        //        Price = newProduct.Price
-        //    };
-        //    try
-        //    {
-        //        _auctionContext.Add<Product>(product);
-        //        _auctionContext.SaveChanges();
-        //        return NoContent();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return BadRequest("Can't add product");
-        //    }
-        //}
-
-        ////http://192.168.1.40:30000/v1/api/auction/product/image
-        //[HttpPost("Product/image")]
-        //public ActionResult CreateProduct([FromBody]ImagePathCommand images)
-        //{
-        //    ProductImagePath productImagePath = new ProductImagePath()
-        //    {
-        //        ProductId = images.ProductId,
-        //    };
-        //    try
-        //    {
-        //        _auctionContext.Add<Product>(product);
-        //        _auctionContext.SaveChanges();
-        //        return NoContent();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return BadRequest("Can't add product");
-        //    }
-        //}
     }
 }
