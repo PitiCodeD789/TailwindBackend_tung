@@ -7,12 +7,14 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Omise;
 using Omise.Models;
 using Tailwind.Trader.Payment.Api.Command;
 using Tailwind.Trader.Payment.Api.Infrastucture;
 using Tailwind.Trader.Payment.Api.Models;
+using TailwindBackend.Validator;
 
 namespace Tailwind.Trader.Payment.Api.Controllers
 {
@@ -20,21 +22,28 @@ namespace Tailwind.Trader.Payment.Api.Controllers
     [ApiController]
     public class PaymentController : ControllerBase
     {
-        private readonly Client client = new Client("pkey_test_5gdhwbsev5jtm6aywj7", "skey_test_5gdhwbsf5de2b3pm9r0");
-        private readonly string url = "http://192.168.1.40:30000/v1/api/auction/paidStatus";
-        private readonly HttpClient httpClient = new HttpClient();
-
+        private readonly Client client;
+        private readonly string paidStatusUrl;
+        private readonly HttpClient httpClient;
         private readonly PaymentContext _paymentContext;
-        public PaymentController(PaymentContext paymentContext)
+        private readonly IConfiguration _configuration;
+
+        public PaymentController(PaymentContext paymentContext, IConfiguration configuration)
         {
             _paymentContext = paymentContext;
+            _configuration = configuration;
+            httpClient = new HttpClient();
+            client = new Client(_configuration["Payment:PKey"], _configuration["Payment:SKey"]);
+            paidStatusUrl = _configuration["Payment:ChangePaymentStatusUrl"];
         }
 
         [HttpPost]
         public ActionResult Payment([FromBody]PaymentCommand paymentCommand)
         {
-            if (!CheckCard(paymentCommand.CardNumber))
-                return BadRequest("CardNumber Invalid");
+            if (!ModelState.IsValid)
+                return BadRequest();
+            if (!PaymentValidator.CheckCard(paymentCommand.CardNumber))
+                return BadRequest("Card number invalid");
 
             Charge result = Pay(paymentCommand).Result;
 
@@ -49,13 +58,10 @@ namespace Tailwind.Trader.Payment.Api.Controllers
                 return BadRequest("Can't Change PaymentStatus");
             }
             return BadRequest();
-
         }
 
-    
-
         private bool ChangePaymentStatus(int payerId, int productId)
-        {            
+        {
             PaidStatusCommand paidStatusCommand = new PaidStatusCommand()
             {
                 PayerId = payerId,
@@ -65,7 +71,7 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             {
                 var jsonString = JsonConvert.SerializeObject(paidStatusCommand);
                 HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                var result = httpClient.PostAsync(url, httpContent).Result;
+                var result = httpClient.PostAsync(paidStatusUrl, httpContent).Result;
 
                 if (result.IsSuccessStatusCode)
                     return true;
@@ -76,8 +82,8 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             {
                 return false;
             }
-
         }
+
         private async Task<Charge> Pay(PaymentCommand paymentCommand)
         {
             try
@@ -94,7 +100,7 @@ namespace Tailwind.Trader.Payment.Api.Controllers
                 var charge = await client.Charges.Create(new CreateChargeRequest
                 {
                     Amount = paymentCommand.Amount,
-                    Currency = "thb",
+                    Currency = _configuration["Payment:MainCurrency"],
                     Card = token.Id
                 });
 
@@ -104,7 +110,6 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             {
                 throw e;
             }
-
         }
 
         private void CreatePaymentTransaction(Charge charge, int payerId, int productId)
@@ -128,25 +133,5 @@ namespace Tailwind.Trader.Payment.Api.Controllers
                 throw e;
             }
         }
-
-        private bool CheckCard(string cardNumber)
-        {
-            Regex visaRegex = new Regex(@"^4[0-9]{6,}$");
-            Regex masterRegex = new Regex(@"^5[1-5][0-9]{5,}|222[1-9][0-9]{3,}|22[3-9][0-9]{4,}|2[3-6][0-9]{5,}|27[01][0-9]{4,}|2720[0-9]{3,}$");
-            Regex jcbRegex = new Regex(@"^(3(?:088|096|112|158|337|5(?:2[89]|[3-8][0-9]))\d{12})$");
-
-            if (visaRegex.IsMatch(cardNumber))
-                return true;
-
-            if (masterRegex.IsMatch(cardNumber))
-                return true;
-
-            if (jcbRegex.IsMatch(cardNumber))
-                return true;
-
-            return false;
-
-        }
-
     }
 }
