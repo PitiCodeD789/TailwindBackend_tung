@@ -125,7 +125,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 return BadRequest();
 
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
-                .Where(product => product.AuctionStatus == Helper.AuctionStatus.Open)
+                .Where(product => product.AuctionStatus == Helper.AuctionStatus.Open && product.BidHistories.Any(bid => bid.BidderId == userId))
                 .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.PaidStatus , x.Expired })
                 .ToList();
 
@@ -482,6 +482,30 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                     }
                 }
             }
+        }
+
+        //http://192.168.1.40:30000/v1/api/auction/ChangeExpireDate
+        [HttpPost("ChangeExpireDate")]
+        public ActionResult ChangeExpireDate([FromBody]ChangeExpireCommand changeExpireCommand)
+        {
+            var product = _auctionContext.Products.FirstOrDefault(x => x.Id == changeExpireCommand.ProductId);
+
+            if (product == null)
+                return BadRequest();
+
+            product.Expired.AddMinutes(changeExpireCommand.Minute);
+            try
+            {
+                _auctionContext.Update<Product>(product);
+                _auctionContext.SaveChanges();
+
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                return BadRequest();
+            }
+
         }
     }
 }
