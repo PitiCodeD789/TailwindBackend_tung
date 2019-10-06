@@ -62,16 +62,11 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidDetail/{userId}")]
         public ActionResult GetBidDetail(int userId)
         {
-            if (userId == default)
+            var a = _auctionContext.Products.Where(x => x.HighestBidderId == userId && x.AuctionStatus == Helper.AuctionStatus.Close);
+            if (a == null)
                 return BadRequest();
-            var bidDetail = _auctionContext.Products.Include(x => x.BidHistories).Where(product => product.BidHistories.Any(bid => bid.BidderId == userId)).Select(x => new { x.BidHistories, x.ProductImages }).ToList();
-            List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
-            {
-                BidHistories = s.BidHistories.LastOrDefault(x => x.BidderId == userId),
-                ProductImages = s.ProductImages.FirstOrDefault(x => x.ImageType == Models.Helper.ImageType.MainPicture).ImagePath,
-            }).ToList();
 
-            return Ok(bidDetailViewModel);
+            return Ok(a);
         }
 
         //http://192.168.1.40:30000/v1/api/auction/auctioned/{userId}
@@ -95,8 +90,8 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             if (userId == default)
                 return BadRequest();
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
-                .Where(product => product.BidHistories.Any(bid => bid.BidderId == userId) && product.AuctionStatus == Helper.AuctionStatus.Open)
-                .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.Expired })
+                .Where(product => product.HighestBidderId == userId && product.AuctionStatus == Helper.AuctionStatus.Open)
+                .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.PaidStatus , x.Expired })
                 .ToList();
 
             List<BidDetailViewModel> bidDetailViewModel = bidDetail.Select(s => new BidDetailViewModel()
@@ -398,5 +393,6 @@ namespace Tailwind.Trader.Auction.Api.Controllers
             }
 
         }
+
     }
 }
