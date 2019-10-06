@@ -19,7 +19,6 @@ namespace Tailwind.Trader.Auction.Api.Controllers
     [ApiController]
     public class AuctionController : ControllerBase
     {
-        public static readonly string authSecret = "7gX4iRjWMRGWoqezlS1Xt2ZtQyZQQxuMIJRt8ws4";
         private readonly AuctionContext _auctionContext;
         private readonly IConfiguration _configuration;
         private FirebaseClient Firebase;
