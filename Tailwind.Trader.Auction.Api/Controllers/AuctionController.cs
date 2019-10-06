@@ -125,7 +125,7 @@ namespace Tailwind.Trader.Auction.Api.Controllers
                 return BadRequest();
 
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
-                .Where(product => product.AuctionStatus == Helper.AuctionStatus.Open)
+                .Where(product => product.AuctionStatus == Helper.AuctionStatus.Open && product.BidHistories.Any(bid => bid.BidderId == userId))
                 .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.PaidStatus , x.Expired })
                 .ToList();
 
