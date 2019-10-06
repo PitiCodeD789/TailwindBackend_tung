@@ -24,6 +24,7 @@ namespace Tailwind.Trader.Payment.Api.Controllers
     {
         private readonly Client client;
         private readonly string paidStatusUrl;
+        private readonly string checkBidUrl;
         private readonly HttpClient httpClient;
         private readonly PaymentContext _paymentContext;
         private readonly IConfiguration _configuration;
@@ -35,18 +36,21 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             httpClient = new HttpClient();
             client = new Client(_configuration["Payment:PKey"], _configuration["Payment:SKey"]);
             paidStatusUrl = _configuration["Payment:ChangePaymentStatusUrl"];
+            checkBidUrl = _configuration["Payment:CheckBidUrl"];
         }
 
         [HttpPost]
         public ActionResult Payment([FromBody]PaymentCommand paymentCommand)
         {
-            if (!Identify(paymentCommand))
+            if (!ModelState.IsValid)
+                return BadRequest("Input InValid");
+
+            if (!CheckBid(paymentCommand))
                 return BadRequest();
 
-            if (!CheckCard(paymentCommand.CardNumber))
+            if (!PaymentValidator.CheckCard(paymentCommand.CardNumber))
                 return BadRequest("CardNumber Invalid");
-            if (!ModelState.IsValid)
-                return BadRequest();
+
             if (!PaymentValidator.CheckCard(paymentCommand.CardNumber))
                 return BadRequest("Card number invalid");
 
@@ -65,9 +69,26 @@ namespace Tailwind.Trader.Payment.Api.Controllers
             return BadRequest();
         }
 
-        private bool Identify(PaymentCommand paymentCommand)
+        private bool CheckBid(PaymentCommand paymentCommand)
         {
-            throw new NotImplementedException();
+            IdentifyCommand identifyCommand = new IdentifyCommand()
+            {
+                UserId = paymentCommand.PayerId,
+                ProductId = paymentCommand.ProductId,
+                Amount = paymentCommand.Amount
+            };
+            try
+            {
+                var jsonString = JsonConvert.SerializeObject(identifyCommand);
+                HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+                var result = httpClient.PostAsync(checkBidUrl, httpContent).Result;
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
 
         private bool ChangePaymentStatus(int payerId, int productId)

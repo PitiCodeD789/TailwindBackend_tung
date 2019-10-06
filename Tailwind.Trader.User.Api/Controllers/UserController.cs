@@ -37,7 +37,6 @@ namespace Tailwind.Trader.User.Api.Controllers
         }
 
         //http://192.168.1.40:32000/v1/api/User/Address
-        //Edit Address
         [HttpPost("Address")]
         public ActionResult EditAddress([FromBody]EditAddressCommand editAddressCommand)
         {
