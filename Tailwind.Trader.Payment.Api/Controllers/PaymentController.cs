@@ -53,16 +53,26 @@ namespace Tailwind.Trader.Payment.Api.Controllers
 
             if (!PaymentValidator.CheckCard(paymentCommand.CardNumber))
                 return BadRequest("Card number invalid");
+            Charge result = new Charge();
 
-            Charge result = Pay(paymentCommand).Result;
+            try
+            {
+                result = Pay(paymentCommand).Result;
+            }
+            catch (OmiseException om)
+            {
+                return BadRequest(om);
+            }
 
             if (result.Status.ToString() == "Successful")
             {
-                CreatePaymentTransaction(result, paymentCommand.PayerId, paymentCommand.ProductId);
                 bool isChange = ChangePaymentStatus(paymentCommand.PayerId, paymentCommand.ProductId);
 
                 if (isChange)
+                {
+                    CreatePaymentTransaction(result, paymentCommand.PayerId, paymentCommand.ProductId);
                     return NoContent();
+                }
 
                 return BadRequest("Can't Change PaymentStatus");
             }

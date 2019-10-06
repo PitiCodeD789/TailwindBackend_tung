@@ -40,7 +40,12 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("Products")]
         public ActionResult GetProducts()
         {
-            List<Product> result = _auctionContext.Products.Include(x => x.ProductImages).ToList();
+            //Check Product Expired
+            CheckExpireProduct();
+
+            List<Product> result = _auctionContext.Products.Include(x => x.ProductImages)
+                .Where(x => x.AuctionStatus == Helper.AuctionStatus.Open)
+                .ToList();
 
             return Ok(result);
         }
@@ -49,6 +54,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("Product/{id}")]
         public ActionResult GetProductById(int id)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (id == default)
                 return BadRequest();
             var result = _auctionContext.Products.Include(x => x.ProductImages).Include(x => x.Details).FirstOrDefault(x => x.Id == id);
@@ -62,35 +70,62 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidDetail/{userId}")]
         public ActionResult GetBidDetail(int userId)
         {
-            var a = _auctionContext.Products.Where(x => x.HighestBidderId == userId && x.AuctionStatus == Helper.AuctionStatus.Close);
-            if (a == null)
+            //Check Product Expired
+            CheckExpireProduct();
+
+            var product = _auctionContext.Products.Where(x => x.HighestBidderId == userId && x.AuctionStatus == Helper.AuctionStatus.Close);
+            if (product == null)
                 return BadRequest();
 
-            return Ok(a);
+            return Ok(product);
         }
 
         //http://192.168.1.40:30000/v1/api/auction/auctioned/{userId}
         [HttpGet("auctioned/{userId}")]
         public ActionResult GetAuctionedItems(int userId)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             var item = _auctionContext.Products
+                .Include(x => x.ProductImages)
                 .Where(x => x.HighestBidderId == userId && x.AuctionStatus == Models.Helper.AuctionStatus.Close)
                 .ToList();
 
             if (item == null)
-                return BadRequest();
+                return Ok();
 
-            return Ok(item);
+            //ต้องมีรูป 0
+            List<AuctionedViewModel> model = item.Select(s => new AuctionedViewModel()
+            {
+                Id = s.Id,
+                Price = s.Price,
+                Name = s.Name,
+                HighestBidderId = s.HighestBidderId,
+                HighestBidderName = s.HighestBidderName,
+                ProductWeight = s.ProductWeight,
+                ProductImages = s.ProductImages?.FirstOrDefault(x => x.ImageType == Models.Helper.ImageType.MainPicture).ImagePath,
+                CreatedDateTime = s.CreatedDateTme,
+                Expired = s.Expired,
+                AuctionStatus = s.AuctionStatus,
+                PaidStatus = s.PaidStatus
+            }).ToList();
+
+            return Ok(model);
         }
 
         //http://192.168.1.40:30000/v1/api/auction/currentbid/{userId}
         [HttpGet("CurrentBid/{userId}")]
         public ActionResult GetCurrentBid(int userId)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (userId == default)
                 return BadRequest();
+
             var bidDetail = _auctionContext.Products.Include(x => x.BidHistories)
-                .Where(product => product.HighestBidderId == userId && product.AuctionStatus == Helper.AuctionStatus.Open)
+                .Where(product => product.AuctionStatus == Helper.AuctionStatus.Open)
                 .Select(x => new { x.BidHistories, x.ProductImages, x.Name, x.Price, x.HighestBidderName, x.PaidStatus , x.Expired })
                 .ToList();
 
@@ -111,6 +146,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("Bid")]
         public ActionResult Bid([FromBody]BidCommand bidCommand)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (!ModelState.IsValid)
                 return BadRequest();
             Product product = _auctionContext.Products.FirstOrDefault(x => x.Id == bidCommand.ProductId);
@@ -176,6 +214,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("FinishAuction")]
         public ActionResult FinishActioin([FromBody]FinishAuctionCommand finishAuctionCommand)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (!ModelState.IsValid)
                 return BadRequest();
             var auctionProduct = _auctionContext.Products.FirstOrDefault(x => x.Id == finishAuctionCommand.ProductId);
@@ -202,6 +243,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
         private async Task<bool> DeleteBid(int productId)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             var bidInfo = (await Firebase.Child(_configuration["Firebase:BidTable"]).OnceAsync<Bid>()).Where(a => a.Object.ProductId == productId).FirstOrDefault();
 
             if (bidInfo == null)
@@ -247,6 +291,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("ProductDetails/{productId}")]
         public ActionResult GetProductDetailById(int productId)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (productId == default)
                 return BadRequest();
             var details = _auctionContext.Details.Where(x => x.ProductId == productId).ToList();
@@ -260,6 +307,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpGet("BidHistories/{productId}")]
         public ActionResult GetBidHistoriesById(int productId)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (productId == default)
                 return BadRequest();
             var details = _auctionContext.BidHistories.Where(x => x.ProductId == productId).ToList();
@@ -271,6 +321,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
         private bool CreateBidHistory(BidCommand bidCommand)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             BidHistory newBid = new BidHistory()
             {
                 BidderId = bidCommand.BidderId,
@@ -295,6 +348,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("PaidStatus")]
         public ActionResult ChangePaidStatus([FromBody]PaidStatusCommand paidStatusCommand)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             if (!ModelState.IsValid)
                 return BadRequest();
 
@@ -327,6 +383,9 @@ namespace Tailwind.Trader.Auction.Api.Controllers
         [HttpPost("bid/check")]
         public ActionResult CheckBid([FromBody]CheckBidCommand checkBidCommand)
         {
+            //Check Product Expired
+            CheckExpireProduct();
+
             var product = _auctionContext.Products.FirstOrDefault(x => x.Id == checkBidCommand.ProductId);
 
             if (product == null)
@@ -394,5 +453,35 @@ namespace Tailwind.Trader.Auction.Api.Controllers
 
         }
 
+        //http://192.168.1.40:30000/v1/api/auction/TestCheckExpired
+        [HttpGet("TestCheckExpired")]
+        public ActionResult TestCheckExpired()
+        {
+            CheckExpireProduct();
+            return Ok();
+        }
+
+        private async Task CheckExpireProduct()
+        {
+            List<Product> expiredItems = _auctionContext.Products.Where(x => x.Expired < DateTime.UtcNow).ToList();
+            if(expiredItems.Count != 0)
+            {
+                foreach (Product item in expiredItems)
+
+
+                {
+                    item.AuctionStatus = Helper.AuctionStatus.Close;
+                    try
+                    {
+                        _auctionContext.Update<Product>(item);
+                        _auctionContext.SaveChanges();
+                    }
+                    catch (Exception e)                    
+                    {
+                        
+                    }
+                }
+            }
+        }
     }
 }
